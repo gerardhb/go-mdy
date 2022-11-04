@@ -2,9 +2,10 @@ package mdy
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"sync"
 )
 
 // mdy 明道云的client
