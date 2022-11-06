@@ -18,7 +18,7 @@ type mdy struct {
 
 // New creates a new mdy
 // secretKey和sign必须有一个不能为空
-func New(appKey, secretKey, sign string) *mdy {
+func New(appKey, sign, secretKey string) *mdy {
 	if appKey == "" {
 		panic("appKey cannot be empty")
 	}
@@ -133,5 +133,14 @@ func (m *mdy) AppReq() *AppRequest {
 		mdy: m,
 		Req: client.R(),
 	}
+}
 
+// GetSign return a sign
+func (m *mdy) GetSign() string {
+	return m.sign
+}
+
+// GetAppKey return a appKey
+func (m *mdy) GetAppKey() string {
+	return m.appKey
 }
