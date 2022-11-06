@@ -1,5 +1,10 @@
 package mdy
 
+import (
+	"fmt"
+	"time"
+)
+
 const (
 	// AppGetURL 获取应用信息 GET
 	AppGetURL = "https://api.mingdao.com/v1/open/app/get"
@@ -12,6 +17,9 @@ const (
 
 	// GetFilterRowsURL 获取列表 POST
 	GetFilterRowsURL = "https://api.mingdao.com/v2/open/worksheet/getFilterRows"
+
+	// AddRowURL 新建行记录 POST
+	AddRowURL = "https://api.mingdao.com/v2/open/worksheet/addRow"
 )
 
 // Response 明道云Response
@@ -24,4 +32,16 @@ type Response[T any] struct {
 
 func (r *Response[T]) Ok() bool {
 	return r.Success
+}
+
+type LocalDateTime time.Time
+
+func (l LocalDateTime) MarshalJSON() ([]byte, error) {
+	t := time.Time(l)
+	return []byte(fmt.Sprintf("\"%v\"", t.Format("2006-01-02 15:04:05"))), nil
+}
+
+func (l LocalDateTime) String() string {
+	t := time.Time(l)
+	return t.Format("2006-01-02 15:04:05")
 }
