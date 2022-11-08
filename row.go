@@ -30,6 +30,7 @@ type (
 	RowDTO struct {
 		BaseDTO
 		WorksheetId     string        `json:"worksheetId"`
+		RowId           string        `json:"rowId"`
 		TriggerWorkflow bool          `json:"triggerWorkflow"`
 		Controls        []*ControlDTO `json:"controls"`
 	}

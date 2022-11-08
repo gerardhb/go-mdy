@@ -20,6 +20,9 @@ const (
 
 	// AddRowURL 新建行记录 POST
 	AddRowURL = "https://api.mingdao.com/v2/open/worksheet/addRow"
+
+	// EditRowURL 更新行记录详情 POST
+	EditRowURL = "https://api.mingdao.com/v2/open/worksheet/editRow"
 )
 
 // Response 明道云Response
