@@ -146,6 +146,18 @@ func (r *WorkSheetRequest) AddRow(row *RowDTO) (string, error) {
 	return result.Data, nil
 }
 
+// EditRow 新建行记录 POST
+// return 记录的id
+func (r *WorkSheetRequest) EditRow(row *RowDTO) (string, error) {
+	r.Set(row)
+	response, err := r.Req.SetResult(&Response[string]{}).SetBody(row).Post(EditRowURL)
+	if err != nil {
+		return "", err
+	}
+	result := response.Result().(*Response[string])
+	return result.Data, nil
+}
+
 func (r *WorkSheetRequest) Set(info any) {
 	if sign, ok := info.(Signer); ok {
 		sign.SetSign(r.mdy.GetSign())
