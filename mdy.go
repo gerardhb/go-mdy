@@ -67,8 +67,8 @@ func WithMdyAfterResponse(_ *resty.Client, res *resty.Response) error {
 	return nil
 }
 
-// WithDebug 开启debug日志
-func (m *mdy) WithDebug() *mdy {
+// EnabledDebug 开启debug日志
+func (m *mdy) EnabledDebug() *mdy {
 	m.client.New = func() any {
 		return buildClient(true)
 	}
