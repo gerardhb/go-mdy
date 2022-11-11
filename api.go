@@ -2,6 +2,7 @@ package mdy
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -21,20 +22,35 @@ const (
 	// AddRowURL 新建行记录 POST
 	AddRowURL = "https://api.mingdao.com/v2/open/worksheet/addRow"
 
+	// AddRowsURL 批量新建行记录 POST
+	AddRowsURL = "https://api.mingdao.com/v2/open/worksheet/addRows"
+
 	// EditRowURL 更新行记录详情 POST
 	EditRowURL = "https://api.mingdao.com/v2/open/worksheet/editRow"
 )
 
+type ResponseOk interface {
+	Ok() bool
+	Msg() string
+	Code() string
+}
+
 // Response 明道云Response
 type Response[T any] struct {
-	ErrorMsg  int  `json:"error_msg"`
-	ErrorCode int  `json:"error_code"`
-	Success   bool `json:"success"`
+	ErrorMsg  string `json:"error_msg"`
+	ErrorCode int    `json:"error_code"`
+	Success   bool   `json:"success"`
 	Data      T
 }
 
 func (r *Response[T]) Ok() bool {
 	return r.Success
+}
+func (r *Response[T]) Msg() string {
+	return r.ErrorMsg
+}
+func (r *Response[T]) Code() string {
+	return strconv.Itoa(r.ErrorCode)
 }
 
 type LocalDateTime time.Time
