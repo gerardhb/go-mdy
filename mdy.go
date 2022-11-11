@@ -8,17 +8,41 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// mdy 明道云的client
-type mdy struct {
+var (
+	mdyPool *sync.Pool
+	once    sync.Once
+)
+
+// Client 明道云的client
+type Client struct {
 	client    sync.Pool // resty.Client
 	appKey    string    // 明道云 appKey
 	secretKey string    // 明道云 secretKey
 	sign      string    // 明道云 sign
 }
 
-// New creates a new mdy
+func InitPool(appKey, sign, secretKey string) *sync.Pool {
+	once.Do(func() {
+		mdyPool = &sync.Pool{
+			New: func() any {
+				return New(appKey, sign, secretKey)
+			},
+		}
+	})
+	return mdyPool
+}
+
+func Get() *Client {
+	return mdyPool.Get().(*Client)
+}
+
+func Put(mdyObj *Client) {
+	mdyPool.Put(mdyObj)
+}
+
+// New creates a new Client
 // secretKey和sign必须有一个不能为空
-func New(appKey, sign, secretKey string) *mdy {
+func New(appKey, sign, secretKey string) *Client {
 	if appKey == "" {
 		panic("appKey cannot be empty")
 	}
@@ -27,7 +51,7 @@ func New(appKey, sign, secretKey string) *mdy {
 		panic("sign or secretKey cannot be empty")
 	}
 
-	m := &mdy{
+	m := &Client{
 		appKey:    appKey,
 		secretKey: secretKey,
 		sign:      sign,
@@ -57,10 +81,11 @@ func WithMdyAfterResponse(_ *resty.Client, res *resty.Response) error {
 		return fmt.Errorf("请求'%v'发生了错误STATUS: %v", res.Request.URL, res.Status())
 	}
 
-	if mdyRes, ok := res.Result().(*Response[any]); ok {
+	if mdyRes, ok := res.Result().(ResponseOk); ok {
+
 		// 明道云请求返回的success 是否成功
 		if !mdyRes.Ok() {
-			return fmt.Errorf("请求'%v'发生了错误:%v-%v", res.Request.URL, mdyRes.ErrorCode, mdyRes.ErrorMsg)
+			return fmt.Errorf("请求'%v'发生了错误:%v-%v", res.Request.URL, mdyRes.Code(), mdyRes.Msg())
 		}
 	}
 
@@ -68,7 +93,7 @@ func WithMdyAfterResponse(_ *resty.Client, res *resty.Response) error {
 }
 
 // EnabledDebug 开启debug日志
-func (m *mdy) EnabledDebug() *mdy {
+func (m *Client) EnabledDebug() *Client {
 	m.client.New = func() any {
 		return buildClient(true)
 	}
@@ -76,7 +101,7 @@ func (m *mdy) EnabledDebug() *mdy {
 }
 
 // SetClient set a *resty.Client
-func (m *mdy) SetClient(new func() *resty.Client) *mdy {
+func (m *Client) SetClient(new func() *resty.Client) *Client {
 	if new != nil {
 		panic("new func must not be nil")
 	}
@@ -89,34 +114,34 @@ func (m *mdy) SetClient(new func() *resty.Client) *mdy {
 }
 
 // SetAppKey set an app key
-func (m *mdy) SetAppKey(appKey string) *mdy {
+func (m *Client) SetAppKey(appKey string) *Client {
 	m.appKey = appKey
 	return m
 }
 
 // SetSign set a sign
-func (m *mdy) SetSign(sign string) *mdy {
+func (m *Client) SetSign(sign string) *Client {
 	m.sign = sign
 	return m
 }
 
 // SetSecretKey set a secret key
-func (m *mdy) SetSecretKey(secretKey string) *mdy {
+func (m *Client) SetSecretKey(secretKey string) *Client {
 	m.secretKey = secretKey
 	return m
 }
 
 // GetClient return a resty.Client
-func (m *mdy) getClient() *resty.Client {
+func (m *Client) getClient() *resty.Client {
 	return m.client.Get().(*resty.Client)
 }
 
 // GetClient return a resty.Client
-func (m *mdy) freeClient(c *resty.Client) {
+func (m *Client) freeClient(c *resty.Client) {
 	m.client.Put(c)
 }
 
-func (m *mdy) WorkSheetReq() *WorkSheetRequest {
+func (m *Client) WorkSheetReq() *WorkSheetRequest {
 	client := m.client.Get().(*resty.Client)
 	defer m.freeClient(client)
 	return &WorkSheetRequest{
@@ -126,7 +151,7 @@ func (m *mdy) WorkSheetReq() *WorkSheetRequest {
 }
 
 // AppReq return an AppRequest
-func (m *mdy) AppReq() *AppRequest {
+func (m *Client) AppReq() *AppRequest {
 	client := m.client.Get().(*resty.Client)
 	defer m.freeClient(client)
 	return &AppRequest{
@@ -136,11 +161,16 @@ func (m *mdy) AppReq() *AppRequest {
 }
 
 // GetSign return a sign
-func (m *mdy) GetSign() string {
+func (m *Client) GetSign() string {
 	return m.sign
 }
 
 // GetAppKey return a appKey
-func (m *mdy) GetAppKey() string {
+func (m *Client) GetAppKey() string {
 	return m.appKey
+}
+
+// Free free *Client
+func (m *Client) Free() {
+	Put(m)
 }

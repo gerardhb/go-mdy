@@ -10,6 +10,10 @@ import (
 
 type RowParams map[string]any
 
+type ControlsGeneric interface {
+	[]*ControlDTO | [][]*ControlDTO
+}
+
 type (
 
 	// FilterRowDTO 列表获取筛选器
@@ -29,10 +33,11 @@ type (
 	// RowDTO 新增行请求DTO
 	RowDTO struct {
 		BaseDTO
-		WorksheetId     string        `json:"worksheetId"`
-		RowId           string        `json:"rowId"`
-		TriggerWorkflow bool          `json:"triggerWorkflow"`
-		Controls        []*ControlDTO `json:"controls"`
+		WorksheetId     string          `json:"worksheetId"`
+		RowId           string          `json:"rowId,omitempty"`
+		TriggerWorkflow bool            `json:"triggerWorkflow,omitempty"`
+		Controls        []*ControlDTO   `json:"controls,omitempty"`
+		Rows            [][]*ControlDTO `json:"rows,omitempty"`
 	}
 
 	ControlDTO struct {
@@ -43,7 +48,7 @@ type (
 		ControlFiles []struct {
 			BaseFile string `json:"baseFile"`
 			FileName string `json:"fileName"`
-		} `json:"controlFiles"`
+		} `json:"controlFiles,omitempty"`
 	}
 )
 
@@ -55,7 +60,7 @@ const (
 	valueTypeIndex = 3
 )
 
-// IdBody 一些附近信息
+// IdBody 一些附件信息
 type IdBody struct {
 	AccountId string `json:"accountId"`
 	Fullname  string `json:"fullname"`
@@ -199,14 +204,21 @@ func ToControls(data any) (result []*ControlDTO, err error) {
 		if mdyTags == "" || mdyTags == "-" {
 			continue
 		}
+		// 空值不处理
+		if val.IsZero() && !strings.Contains(mdyTags, "default:") {
+			continue
+		}
 
 		// ControlDTO的指针
 		controlPtr := reflect.New(ctlType)
 		// ControlDTO的实际Value
 		control := controlPtr.Elem()
-		tagsHandle(mdyTags, control)
+		if err := tagsHandle(mdyTags, control); err != nil {
+			return nil, err
+		}
 
 		controlValueField := control.Field(valueIndex)
+
 		err := setControlValue(controlValueField, val, structField)
 		if err != nil {
 			return nil, err
@@ -223,38 +235,36 @@ func tagsHandle(mdyTags string, control reflect.Value) error {
 	mdyTagStr := strings.Split(mdyTags, ";")
 	for i := range mdyTagStr {
 		keyValues := strings.Split(mdyTagStr[i], ":")
-		for range keyValues {
-			if len(keyValues) == 2 {
-				key := keyValues[0]
-				value := keyValues[1]
-				if key == "ctlId" {
-					controlIdField := control.Field(controlIdIndex)
-					if controlIdField.IsValid() {
-						controlIdField.SetString(value)
-					}
-				} else if key == "valueType" {
-					val, err := strconv.Atoi(value)
-					if err != nil {
-						return fmt.Errorf("valueType error converting %v to int: %v\n", value, err)
-					}
-					controlIdField := control.Field(valueTypeIndex)
-					if controlIdField.IsValid() {
-						controlIdField.SetInt(int64(val))
-					}
-				} else if key == "editType" {
-					val, err := strconv.Atoi(value)
-					if err != nil {
-						return fmt.Errorf("editType error converting %v to int: %v\n", value, err)
-					}
-					controlIdField := control.Field(editTypeIndex)
-					if controlIdField.IsValid() {
-						controlIdField.SetInt(int64(val))
-					}
-				} else if key == "default" {
-					valueField := control.Field(valueIndex)
-					if valueField.IsValid() {
-						valueField.SetString(value)
-					}
+		if len(keyValues) == 2 {
+			key := keyValues[0]
+			value := keyValues[1]
+			if key == "ctlId" {
+				controlIdField := control.Field(controlIdIndex)
+				if controlIdField.IsValid() {
+					controlIdField.SetString(value)
+				}
+			} else if key == "valueType" {
+				val, err := strconv.Atoi(value)
+				if err != nil {
+					return fmt.Errorf("valueType error converting %v to int: %v\n", value, err)
+				}
+				controlIdField := control.Field(valueTypeIndex)
+				if controlIdField.IsValid() {
+					controlIdField.SetInt(int64(val))
+				}
+			} else if key == "editType" {
+				val, err := strconv.Atoi(value)
+				if err != nil {
+					return fmt.Errorf("editType error converting %v to int: %v\n", value, err)
+				}
+				controlIdField := control.Field(editTypeIndex)
+				if controlIdField.IsValid() {
+					controlIdField.SetInt(int64(val))
+				}
+			} else if key == "default" {
+				valueField := control.Field(valueIndex)
+				if valueField.IsValid() {
+					valueField.SetString(value)
 				}
 			}
 		}

@@ -4,7 +4,7 @@ import "github.com/go-resty/resty/v2"
 
 // WorkSheetRequest 代表明道云工作表request
 type WorkSheetRequest struct {
-	mdy *mdy
+	mdy *Client
 	Req *resty.Request
 }
 
@@ -146,15 +146,27 @@ func (r *WorkSheetRequest) AddRow(row *RowDTO) (string, error) {
 	return result.Data, nil
 }
 
+// AddRows 批量新建行记录 POST
+// return 新增的行数量
+func (r *WorkSheetRequest) AddRows(row *RowDTO) (int, error) {
+	r.Set(row)
+	response, err := r.Req.SetResult(&Response[int]{}).SetBody(row).Post(AddRowsURL)
+	if err != nil {
+		return 0, err
+	}
+	result := response.Result().(*Response[int])
+	return result.Data, nil
+}
+
 // EditRow 新建行记录 POST
 // return 记录的id
-func (r *WorkSheetRequest) EditRow(row *RowDTO) (string, error) {
+func (r *WorkSheetRequest) EditRow(row *RowDTO) (bool, error) {
 	r.Set(row)
-	response, err := r.Req.SetResult(&Response[string]{}).SetBody(row).Post(EditRowURL)
+	response, err := r.Req.SetResult(&Response[bool]{}).SetBody(row).Post(EditRowURL)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	result := response.Result().(*Response[string])
+	result := response.Result().(*Response[bool])
 	return result.Data, nil
 }
 

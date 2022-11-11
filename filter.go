@@ -8,17 +8,17 @@ type (
 	Filter struct {
 		ControlId     string        `json:"controlId"` // 字段ID 必填
 		DataType      DataType      `json:"dataType"`  // 控件类型编号
-		SpliceType    SpliceType    `json:"spliceType"`
-		FilterType    FilterType    `json:"filterType"`
-		Value         string        `json:"value"`
-		Values        []string      `json:"values"`
-		DateRange     DateRange     `json:"dateRange"`
-		DateRangeType DateRangeType `json:"dateRangeType"`
-		MinValue      string        `json:"minValue"`
-		MaxValue      string        `json:"maxValue"`
-		IsAsc         bool          `json:"isAsc"`        // "是否升序"
-		IsGroup       bool          `json:"isGroup"`      // "是否升序"
-		GroupFilters  []Filter      `json:"groupFilters"` // "筛选组列表"
+		SpliceType    SpliceType    `json:"spliceType,omitempty"`
+		FilterType    FilterType    `json:"filterType,omitempty"`
+		Value         string        `json:"value,omitempty"`
+		Values        []string      `json:"values,omitempty"`
+		DateRange     DateRange     `json:"dateRange,omitempty"`
+		DateRangeType DateRangeType `json:"dateRangeType,omitempty"`
+		MinValue      string        `json:"minValue,omitempty"`
+		MaxValue      string        `json:"maxValue,omitempty"`
+		IsAsc         bool          `json:"isAsc,omitempty"`        // "是否升序"
+		IsGroup       bool          `json:"isGroup,omitempty"`      // "是否升序"
+		GroupFilters  []Filter      `json:"groupFilters,omitempty"` // "筛选组列表"
 	}
 )
 
@@ -26,7 +26,7 @@ type (
 type DataType int
 
 func (d DataType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%v\"", d)), nil
+	return []byte(fmt.Sprintf("%v", d)), nil
 }
 
 const (
@@ -86,14 +86,14 @@ const (
 )
 
 func (d SpliceType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%v\"", d)), nil
+	return []byte(fmt.Sprintf("%v", d)), nil
 }
 
 // FilterType 筛选类型
 type FilterType int
 
 func (d FilterType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%v\"", d)), nil
+	return []byte(fmt.Sprintf("%v", d)), nil
 }
 
 const (
@@ -154,7 +154,7 @@ const (
 type DateRange int
 
 func (d DateRange) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%v\"", d)), nil
+	return []byte(fmt.Sprintf("%v", d)), nil
 }
 
 const (
@@ -191,7 +191,7 @@ const (
 type DateRangeType int
 
 func (d DateRangeType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%v\"", d)), nil
+	return []byte(fmt.Sprintf("%v", d)), nil
 }
 
 const (
