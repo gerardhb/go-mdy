@@ -36,7 +36,7 @@ type (
 
 // AppRequest 代表明道云应用信息Request
 type AppRequest struct {
-	mdy *mdy
+	mdy *Client
 	Req *resty.Request
 }
 
